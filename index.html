@@ -154,17 +154,36 @@ footer .love{font-family:"Lora",Georgia,serif;font-style:italic;color:#F0D9CF;ma
 .knot .kt-body{fill:#B25A4C;stroke:#7E3B30;stroke-width:.9}
 .knot .kt-wrap{stroke:#8E3F2E;stroke-width:1.1;opacity:.75}
 .knot .kt-hi{fill:#F2C2B5;stroke:none;opacity:.85}
+
+/* Front layer: where the thread comes over a card edge it shows as running stitches, then dives behind */
+.thread-front{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;overflow:visible}
+.st path.t{fill:none;stroke:#B25A4C;stroke-width:2;stroke-linecap:round}
+.st path.sd{fill:none;stroke:rgba(70,40,30,.16);stroke-width:2.6;stroke-linecap:round;transform:translate(.8px,1.4px)}
+.st path.hl{fill:none;stroke:#E7A99B;stroke-width:.7;stroke-linecap:round;opacity:.8}
+.st circle{fill:#6E4A40;opacity:.55}
+.st{opacity:0;transition:opacity .25s}
+.st.on{opacity:1}
+.st.on path.t{animation:pull .35s ease-out}
+@keyframes pull{from{stroke-dasharray:0 40}to{stroke-dasharray:40 0}}
+#needleF{transition:opacity .15s}
 .threaded .wrap{position:relative;z-index:2}
-/* On phones the thread lies on top of the page (cards fill the width), slightly softened */
-@media (max-width:640px){
-  .thread{z-index:3}
-  #threadPath{stroke-width:1.9;opacity:.8}
-  #threadShadow{opacity:.7}
-}
+@media (max-width:640px){.threaded .wrap{padding-left:1.9rem;padding-right:1.9rem}}
 
 .threaded :is(.us,.box,.hours,.s,.feed){--halo:var(--cream)}
 .threaded .s-more{--halo:var(--plum-l)}
 .threaded :is(h2,.lead,.note,.gift,.ig){text-shadow:0 0 1px var(--halo),0 0 3px var(--halo),0 0 6px var(--halo),0 0 10px var(--halo)}
+
+/* "Åpningstider" is embroidered by the needle as you reach it */
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+h2.sewn{margin:0 auto .4rem;max-width:560px}
+.sewsvg{display:block;width:100%;height:auto;overflow:visible}
+.sewsvg text{font-family:"Lora",Georgia,serif;font-weight:700;font-size:68px;letter-spacing:1px}
+.sew-satin{fill:url(#satin)}
+.sew-edge{fill:none;stroke:#6B2E24;stroke-width:1.2;stroke-dasharray:3.2 2.2;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+.sew-tail{fill:none;stroke:#B4594A;stroke-width:1.5;stroke-linecap:round}
+#patch{transition:opacity .6s ease}
+.hours h2.sewn+ul{margin-top:.4rem}
+@media (prefers-reduced-motion:reduce){#sewNeedle{display:none}}
 .sticky{position:fixed;left:0;right:0;bottom:0;padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom,0px));background:rgba(47,59,107,.97);display:none;gap:.6rem;z-index:10}
 .sticky .btn{flex:1;padding:.85rem .8rem;color:#fff;border-color:#fff}
 .sticky .btn.primary{background:#fff;color:var(--navy)}
@@ -202,7 +221,12 @@ footer .love{font-family:"Lora",Georgia,serif;font-style:italic;color:#F0D9CF;ma
     <path id="threadShadow"/>
     <path id="threadPath"/>
     <g id="knots"></g>
-    <g id="needle"><path d="M-30 0 C-27 -1.5 -4 -1.4 9 0 C-4 1.4 -27 1.5 -30 0 Z" fill="url(#steel)" stroke="#6F7277" stroke-width=".4"/><ellipse cx="-24" cy="0" rx="3.4" ry=".75" fill="#FFFBF5"/></g>
+    <g id="needle" style="display:none"><path d="M-30 0 C-27 -1.5 -4 -1.4 9 0 C-4 1.4 -27 1.5 -30 0 Z" fill="url(#steel)" stroke="#6F7277" stroke-width=".4"/><ellipse cx="-24" cy="0" rx="3.4" ry=".75" fill="#FFFBF5"/></g>
+  </svg>
+  <svg class="thread-front" id="threadFront" aria-hidden="true">
+    <defs><linearGradient id="steel2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E9196"/><stop offset=".5" stop-color="#E4E6E9"/><stop offset="1" stop-color="#7D8085"/></linearGradient></defs>
+    <g id="stitches"></g>
+    <g id="needleF"><path d="M-30 0 C-27 -1.5 -4 -1.4 9 0 C-4 1.4 -27 1.5 -30 0 Z" fill="url(#steel2)" stroke="#6F7277" stroke-width=".4"/><ellipse cx="-24" cy="0" rx="3.4" ry=".75" fill="#FFFBF5"/></g>
   </svg>
 
 
@@ -285,7 +309,39 @@ footer .love{font-family:"Lora",Georgia,serif;font-style:italic;color:#F0D9CF;ma
 <section style="padding-top:0" id="besok">
   <div class="wrap" style="text-align:center">
     <div class="hours fade-up">
-      <h2>Åpningstider</h2>
+      <h2 class="sewn"><span class="sr-only">Åpningstider</span>
+        <svg class="sewsvg" viewBox="0 0 640 150" aria-hidden="true">
+          <defs>
+            <pattern id="satin" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(-38)">
+              <rect width="5" height="5" fill="#8F3628"/><rect width="2.4" height="5" fill="#AC4A3A"/><rect x="2.4" width=".55" height="5" fill="#E08E7B" opacity=".75"/>
+            </pattern>
+            <pattern id="linen" patternUnits="userSpaceOnUse" width="4" height="4">
+              <rect width="4" height="4" fill="#FBF4EA"/><path d="M0 .5H4M.5 0V4" stroke="#EDE0CF" stroke-width=".6"/>
+            </pattern>
+            <filter id="puff" x="-5%" y="-20%" width="110%" height="140%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="b"/>
+              <feSpecularLighting in="b" surfaceScale="3" specularConstant=".6" specularExponent="20" lighting-color="#fff" result="s"><fePointLight x="-120" y="-260" z="260"/></feSpecularLighting>
+              <feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+              <feComposite in="SourceGraphic" in2="s2" operator="arithmetic" k2="1" k3=".2"/>
+            </filter>
+            <filter id="raise" x="-5%" y="-20%" width="110%" height="150%"><feDropShadow dx="1.2" dy="2.2" stdDeviation="1.3" flood-color="#5A2A20" flood-opacity=".38"/></filter>
+            <clipPath id="sewClip"><rect id="sewRect" x="0" y="0" width="0" height="150"/></clipPath>
+            <linearGradient id="steel3" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E9196"/><stop offset=".5" stop-color="#E4E6E9"/><stop offset="1" stop-color="#7D8085"/></linearGradient>
+          </defs>
+          <!-- fabric patch -->
+          <g id="patch" opacity="0">
+            <rect x="8" y="8" width="624" height="134" rx="18" fill="url(#linen)" stroke="#E6D6C6" stroke-width="1.2"/>
+            <rect x="19" y="19" width="602" height="112" rx="11" fill="none" stroke="#B4594A" stroke-width="1.7" stroke-dasharray="7 4.5" stroke-linecap="round"/>
+          </g>
+          <!-- embroidered word -->
+          <g clip-path="url(#sewClip)">
+            <g filter="url(#raise)"><text x="320" y="98" text-anchor="middle" class="sew-satin" filter="url(#puff)">Åpningstider</text></g>
+            <text x="320" y="98" text-anchor="middle" class="sew-edge">Åpningstider</text>
+          </g>
+          <path id="sewTail" class="sew-tail" d=""/>
+          <g id="sewNeedle" opacity="0"><path d="M-30 0 C-27 -1.5 -4 -1.4 9 0 C-4 1.4 -27 1.5 -30 0 Z" fill="url(#steel3)" stroke="#6F7277" stroke-width=".4"/><ellipse cx="-24" cy="0" rx="3.4" ry=".75" fill="#FFFBF5"/></g>
+        </svg>
+      </h2>
       <ul id="hours">
         <li data-d="1,2,3,5">Mandag, tirsdag, onsdag, fredag 10–16</li>
         <li data-d="4">Torsdag 10–19</li>
@@ -319,6 +375,43 @@ footer .love{font-family:"Lora",Georgia,serif;font-style:italic;color:#F0D9CF;ma
   if(!box) return;
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let len=0;
+  const front=document.getElementById('threadFront'), stG=document.getElementById('stitches'), needleF=document.getElementById('needleF');
+  const cards=[...box.querySelectorAll('.us,.box,.s,.s-more,.hours,.feed')];
+  const overSet=new Set(cards);   /* stitch in and out of every card it crosses */
+  const BAND=44, S=11, G=7;
+  let rects=[], stitches=[];
+  const rectOf=el=>{let x=0,y=0,e=el;while(e&&e!==box){x+=e.offsetLeft;y+=e.offsetTop;e=e.offsetParent}const cs=getComputedStyle(el);
+    return {x,y,w:el.offsetWidth,h:el.offsetHeight,over:overSet.has(el),bt:Math.max(14,Math.min(BAND,parseFloat(cs.paddingTop)-3)),bb:Math.max(14,Math.min(BAND,parseFloat(cs.paddingBottom)-3)),bl:Math.max(12,Math.min(BAND,parseFloat(cs.paddingLeft)-4)),br:Math.max(12,Math.min(BAND,parseFloat(cs.paddingRight)-4))}};
+  const inBand=(x,y)=>rects.some(r=>{if(!r.over) return false;
+    const inX=x>r.x-2&&x<r.x+r.w+2, inY=y>r.y-2&&y<r.y+r.h+2; if(!inX||!inY) return false;
+    const top=y<r.y+r.bt, bot=y>r.y+r.h-r.bb, left=x<r.x+r.bl, right=x>r.x+r.w-r.br;
+    /* keep clear of the rounded corners */
+    const cx=Math.min(x-r.x,r.x+r.w-x), cy=Math.min(y-r.y,r.y+r.h-y); if(cx<14&&cy<14) return false;
+    return top||bot||left||right;});
+  const hidden=(x,y)=>rects.some(r=>x>r.x&&x<r.x+r.w&&y>r.y&&y<r.y+r.h)&&!inBand(x,y);
+  function setFront(){
+    front.setAttribute('viewBox',svg.getAttribute('viewBox'));
+    rects=cards.map(rectOf);
+    /* walk the thread; wherever it lies in an "over" band, lay explicit stitches with needle holes */
+    const ns='http://www.w3.org/2000/svg'; stG.innerHTML=''; stitches=[];
+    let l=0, inside=false, cursor=0;
+    while(l<len){
+      const q=path.getPointAtLength(l), ib=inBand(q.x,q.y);
+      if(ib&&!inside){inside=true;cursor=l}
+      if(inside&&ib&&l>=cursor){
+        const l1=Math.min(len,l+S), q1=path.getPointAtLength(l1), qm=path.getPointAtLength(l+S/2);
+        if(inBand(q1.x,q1.y)){
+          const g=document.createElementNS(ns,'g'); g.setAttribute('class','st');
+          const dd=`M${q.x.toFixed(1)} ${q.y.toFixed(1)} Q${qm.x.toFixed(1)} ${qm.y.toFixed(1)} ${q1.x.toFixed(1)} ${q1.y.toFixed(1)}`;
+          g.innerHTML=`<circle cx="${q.x.toFixed(1)}" cy="${q.y.toFixed(1)}" r="1.4"/><circle cx="${q1.x.toFixed(1)}" cy="${q1.y.toFixed(1)}" r="1.4"/><path class="sd" d="${dd}"/><path class="t" d="${dd}"/><path class="hl" d="${dd}"/>`;
+          stG.appendChild(g); stitches.push({el:g,at:l1});
+        }
+        cursor=l+S+G;
+      }
+      if(!ib) inside=false;
+      l+=2;
+    }
+  }
   let knots=[], inView=true;
   const KNOT='<path class="kt-tail" d="M-6 3 q-5 4 -11 3 M6 3 q5 5 11 5"/>'+
              '<ellipse class="kt-body" rx="7.5" ry="5.6"/>'+
@@ -342,6 +435,25 @@ footer .love{font-family:"Lora",Georgia,serif;font-style:italic;color:#F0D9CF;ma
       return {d:o, end:py+k*2*Math.PI*turns};
     };
     const down=(px,y0,y1)=>` C${px} ${y0+(y1-y0)*.35} ${px} ${y1-(y1-y0)*.35} ${px} ${y1}`;
+    if(small){
+      const g=14; let x=w-g, y=0, side=1, n=0; let dd='M'+x+' 0';
+      const hop=Math.max(520,Math.min(760,h/5));
+      while(y<h){
+        const run=Math.min(h,y+hop*.72);
+        /* hem stitch: down the gutter with a soft wobble */
+        dd+=` C${x+(side>0?-5:5)} ${y+(run-y)*.33} ${x+(side>0?5:-5)} ${y+(run-y)*.66} ${x} ${run}`;
+        if(run>=h) break;
+        /* a small curl in the gutter */
+        const c=curl(x,run,side>0?1:-1,5.5); dd+=c.d; let yy=c.end;
+        /* cross behind the content to the other gutter */
+        const ny=Math.min(h,yy+hop*.28), nx=side>0?g:w-g;
+        dd+=` C${x} ${yy+(ny-yy)*.55} ${nx} ${ny-(ny-yy)*.55} ${nx} ${ny}`;
+        x=nx; y=ny; side*=-1; n++;
+      }
+      path.setAttribute('d',dd); len=path.getTotalLength(); path.style.setProperty('--len',len);
+      const sh=document.getElementById('threadShadow'); sh.setAttribute('d',dd); sh.style.setProperty('--len',len); setFront();
+      document.getElementById('knots').innerHTML=''; knots=[]; update(); return;
+    }
     const kinds=['curl','spin','big','curl','spin','big'];
     while(y<h){
       const ny=Math.min(h,y+step), nx=side>0?m:w-m;
@@ -367,7 +479,7 @@ footer .love{font-family:"Lora",Georgia,serif;font-style:italic;color:#F0D9CF;ma
     }
     path.setAttribute('d',d); len=path.getTotalLength();
     path.style.setProperty('--len',len);
-    const sh=document.getElementById('threadShadow'); sh.setAttribute('d',d); sh.style.setProperty('--len',len);
+    const sh=document.getElementById('threadShadow'); sh.setAttribute('d',d); sh.style.setProperty('--len',len); setFront();
     /* find path length at each knot point by sampling */
     const lenAt=(px,py)=>{let best=0,bd=1e9;for(let l=0;l<=len;l+=6){const q=path.getPointAtLength(l),dd=(q.x-px)**2+(q.y-py)**2;if(dd<bd){bd=dd;best=l}}return best};
     const g=document.getElementById('knots'); g.innerHTML='';
@@ -386,13 +498,38 @@ footer .love{font-family:"Lora",Georgia,serif;font-style:italic;color:#F0D9CF;ma
     const drawn=len*p; path.style.strokeDashoffset=len-drawn; document.getElementById('threadShadow').style.strokeDashoffset=len-drawn;
     const pt=path.getPointAtLength(drawn), pt2=path.getPointAtLength(Math.min(len,drawn+1));
     const ang=Math.atan2(pt2.y-pt.y,pt2.x-pt.x)*180/Math.PI;
-    needle.setAttribute('transform','translate('+pt.x+' '+pt.y+') rotate('+ang+') scale(1.7)');
-    needle.style.opacity=(p>0&&p<1)?1:0;
+    needleF.setAttribute('transform','translate('+pt.x+' '+pt.y+') rotate('+ang+') scale(1.7)');
+    needleF.style.opacity=(p>0&&p<1&&!hidden(pt.x,pt.y))?1:0;
+    stitches.forEach(s=>s.el.classList.toggle('on',drawn>=s.at));
     knots.forEach(k=>k.el.classList.toggle('on',drawn>=k.at-1));
   }
   let ticking=false;
   addEventListener('scroll',()=>{if(!ticking){ticking=true;requestAnimationFrame(()=>{update();ticking=false})}},{passive:true});
-  addEventListener('resize',build); addEventListener('load',build); build();
+  addEventListener('resize',build); addEventListener('load',()=>{build();setTimeout(build,1200)}); build();
+})();
+
+/* Embroider the "Åpningstider" heading in step with scrolling (one-way) */
+(function(){
+  const svg=document.querySelector('.sewsvg'); if(!svg) return;
+  const rect=document.getElementById('sewRect'), nd=document.getElementById('sewNeedle'), tail=document.getElementById('sewTail');
+  const card=svg.closest('.hours')||svg; const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const txt=svg.querySelector('.sew-edge'), patch=document.getElementById('patch'); let x0=60,x1=580,maxP=0;
+  function measure(){try{const b=txt.getBBox();x0=b.x-8;x1=b.x+b.width+10}catch(e){}}
+  function upd(){
+    let p=1;
+    if(!reduce){const r=card.getBoundingClientRect(),vh=innerHeight;const start=vh*.95,end=vh*.40;p=Math.max(maxP,Math.min(1,Math.max(0,(start-r.top)/(start-end))));maxP=p}
+    patch.setAttribute('opacity',Math.min(1,p*6));
+    const q=Math.min(1,Math.max(0,(p-.1)/.9));            /* text after the patch appears */
+    const x=x0+(x1-x0)*q; rect.setAttribute('width',x);
+    const bob=Math.sin(q*110)*20, y=66+bob;               /* needle dips in and out of the fabric */
+    nd.setAttribute('transform',`translate(${x+8} ${y}) rotate(${-32+bob*1.1}) scale(1.6)`);
+    nd.setAttribute('opacity',(q>0&&q<1)?1:0);
+    tail.setAttribute('d',(q>0&&q<1)?`M${x-1} 84 Q${x+4} ${y+16} ${x+8-31} ${y}`:'');
+  }
+  measure(); upd();
+  addEventListener('scroll',()=>requestAnimationFrame(upd),{passive:true});
+  addEventListener('resize',()=>{measure();upd()});
+  (document.fonts&&document.fonts.ready||Promise.resolve()).then(()=>{measure();upd()});
 })();
 document.getElementById('loadFeed').onclick=()=>{
   const f=document.getElementById('feed'), w=Math.min(500,Math.max(280,f.clientWidth));
