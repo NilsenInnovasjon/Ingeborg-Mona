@@ -165,6 +165,7 @@ footer .love{font-family:"Lora",Georgia,serif;font-style:italic;color:#F0D9CF;ma
 @keyframes pull{from{stroke-dasharray:0 40}to{stroke-dasharray:40 0}}
 #needleF{transition:opacity .15s;will-change:transform}
 .threaded .wrap{position:relative;z-index:2}
+#nytt .wrap{z-index:5}   /* Facebook section stays above the thread and needle */
 @media (max-width:640px){.threaded .wrap{padding-left:1.9rem;padding-right:1.9rem}}
 
 .threaded :is(.us,.box,.hours,.s,.feed){--halo:var(--cream)}
@@ -392,7 +393,8 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
   let len=0;
   const front=document.getElementById('threadFront'), stG=document.getElementById('stitches'), needleF=document.getElementById('needleF');
   const cards=[...box.querySelectorAll('.us,.box,.s,.s-more,.hours,.feed')];
-  const overSet=new Set(cards);   /* stitch in and out of every card it crosses */
+  const stitchable=el=>!el.classList.contains('feed');   /* the Facebook box always sits on top of the thread */
+  const overSet=new Set(cards.filter(stitchable));   /* stitch in and out of every card it crosses, except Facebook */
   const BAND=44, S=11, G=7;
   let rects=[], stitches=[];
   const rectOf=el=>{let x=0,y=0,e=el;while(e&&e!==box){x+=e.offsetLeft;y+=e.offsetTop;e=e.offsetParent}const cs=getComputedStyle(el);
