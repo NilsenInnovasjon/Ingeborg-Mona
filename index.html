@@ -19,8 +19,6 @@
 }
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px);background:var(--linen)}
-html,body{overflow-x:hidden}
-@supports (overflow:clip){html,body{overflow-x:clip}}
 body{margin:0;color:var(--ink);font-family:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:1.08rem;line-height:1.7;
   background:
     repeating-linear-gradient(0deg,rgba(120,90,60,.035) 0 1px,transparent 1px 4px),
@@ -34,7 +32,7 @@ h1,h2,h3{font-family:"Lora",Georgia,serif;font-weight:600;color:var(--ink)}
 .stitch{height:0;border-top:2.5px dashed var(--thread);opacity:.7}
 
 /* HERO card */
-.hero{padding:2.8rem 0 0}
+.hero{padding:2.8rem 0 0;overflow-x:clip}
 .card{background:var(--cream);border-radius:28px;position:relative;padding:3rem 1.5rem 2.8rem;text-align:center;box-shadow:0 24px 40px -30px rgba(80,50,30,.45);overflow:hidden}
 .card::before{content:"";position:absolute;inset:12px;border:2.5px dashed rgba(192,96,74,.55);border-radius:20px;pointer-events:none;animation:sew 2s .2s cubic-bezier(.5,0,.3,1) both}
 @keyframes sew{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
@@ -142,7 +140,7 @@ footer .love{font-family:"Lora",Georgia,serif;font-style:italic;color:#F0D9CF;ma
 
 
 /* Red thread sewn down the page as you scroll (from OZETA) */
-.threaded{position:relative;--halo:var(--linen)}
+.threaded{position:relative;--halo:var(--linen);overflow-x:clip}
 .thread{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;overflow:visible}
 #threadPath{will-change:stroke-dashoffset;fill:none;stroke:#B25A4C;stroke-width:1.6;stroke-linecap:round;stroke-dasharray:var(--len) var(--len)}
 #threadShadow{fill:none;stroke:rgba(70,40,30,.10);stroke-width:2.4;stroke-linecap:round;stroke-dasharray:var(--len) var(--len);transform:translate(1.2px,1.8px)}
@@ -201,7 +199,7 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
 .seam .x{fill:none;stroke:#B25A4C;stroke-width:1.9;stroke-linecap:round}
 .seam .xs{fill:none;stroke:rgba(70,40,30,.16);stroke-width:2.5;stroke-linecap:round}
 .seam circle{fill:#6E4A40;opacity:.55}
-.sticky{position:fixed;left:0;right:0;bottom:0;padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom,0px));background:rgba(47,59,107,.97);display:none;gap:.6rem;z-index:10}
+.sticky{position:fixed;left:0;right:0;bottom:0;transform:translateZ(0);will-change:transform;backface-visibility:hidden;contain:layout paint;padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom,0px));background:rgba(47,59,107,.97);display:none;gap:.6rem;z-index:10}
 .sticky .btn{flex:1;padding:.85rem .8rem;color:#fff;border-color:#fff}
 .sticky .btn.primary{background:#fff;color:var(--navy)}
 @media (max-width:640px){.sticky{display:flex}body{padding-bottom:5.5rem}}
