@@ -184,6 +184,16 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
 #patch{transition:opacity .6s ease}
 .hours h2.sewn+ul{margin-top:.4rem}
 @media (prefers-reduced-motion:reduce){#sewNeedle{display:none}}
+
+/* Service ribbon rolls on smaller screens instead of being cut off */
+@media (max-width:820px){
+  .band{overflow:hidden;padding-left:0;padding-right:0}
+  .band p{display:flex;width:max-content;max-width:none;margin:0;white-space:nowrap;animation:bandroll 26s linear infinite}
+  .band p .grp{display:flex;align-items:center;padding-right:.6rem}
+}
+@keyframes bandroll{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.band p{animation:none!important}.band{overflow-x:auto}}
+@media (min-width:821px){.band p{max-width:1140px}.band p .grp[aria-hidden]{display:none}.band p .grp>i:last-child{display:none}}
 .sticky{position:fixed;left:0;right:0;bottom:0;padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom,0px));background:rgba(47,59,107,.97);display:none;gap:.6rem;z-index:10}
 .sticky .btn{flex:1;padding:.85rem .8rem;color:#fff;border-color:#fff}
 .sticky .btn.primary{background:#fff;color:var(--navy)}
@@ -213,7 +223,7 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
       </div>
     </div>
   </div>
-  <div class="band"><p><span style="white-space:nowrap">Retting</span><i>|</i><span style="white-space:nowrap">Gardinsøm</span><i>|</i><span style="white-space:nowrap">Omsøm</span><i>|</i><span style="white-space:nowrap">Bytting av glidelås</span><i>|</i><span style="white-space:nowrap">Brudekjole/bunad justering</span><i>|</i><span style="white-space:nowrap">Rask levering</span></p></div>
+  <div class="band"><p id="bandTrack"><span style="white-space:nowrap">Retting</span><i>|</i><span style="white-space:nowrap">Gardinsøm</span><i>|</i><span style="white-space:nowrap">Omsøm</span><i>|</i><span style="white-space:nowrap">Bytting av glidelås</span><i>|</i><span style="white-space:nowrap">Brudekjole/bunad justering</span><i>|</i><span style="white-space:nowrap">Rask levering</span></p></div>
 </header>
 <div class="threaded" id="threaded">
   <svg class="thread" id="thread" aria-hidden="true">
@@ -561,6 +571,10 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
   addEventListener('resize',()=>{measure();upd()});
   (document.fonts&&document.fonts.ready||Promise.resolve()).then(()=>{measure();upd()});
 })();
+
+/* Duplicate the ribbon content so it can roll seamlessly on phones */
+(function(){const t=document.getElementById('bandTrack');if(!t)return;
+  const inner=t.innerHTML;t.innerHTML='<span class="grp">'+inner+'<i>|</i></span><span class="grp" aria-hidden="true">'+inner+'<i>|</i></span>';})();
 document.getElementById('loadFeed').onclick=()=>{
   const f=document.getElementById('feed'), w=Math.min(500,Math.max(280,f.clientWidth));
   f.innerHTML='<iframe title="Facebook-innlegg fra Ingeborgs Tråkleri" src="https://www.facebook.com/plugins/page.php?href='+encodeURIComponent('https://www.facebook.com/ingeborgstraakleri')+'&tabs=timeline&width='+w+'&height=580&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false" loading="lazy" allow="encrypted-media"></iframe>';
