@@ -144,7 +144,7 @@ footer .love{font-family:"Lora",Georgia,serif;font-style:italic;color:#F0D9CF;ma
 /* Red thread sewn down the page as you scroll (from OZETA) */
 .threaded{position:relative;--halo:var(--linen)}
 .thread{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;overflow:visible}
-#threadPath{fill:none;stroke:#B25A4C;stroke-width:1.6;stroke-linecap:round;stroke-dasharray:var(--len) var(--len)}
+#threadPath{will-change:stroke-dashoffset;fill:none;stroke:#B25A4C;stroke-width:1.6;stroke-linecap:round;stroke-dasharray:var(--len) var(--len)}
 #threadShadow{fill:none;stroke:rgba(70,40,30,.10);stroke-width:2.4;stroke-linecap:round;stroke-dasharray:var(--len) var(--len);transform:translate(1.2px,1.8px)}
 
 .knot .kt-in{transform:scale(0);transform-box:fill-box;transform-origin:center;transition:transform .45s cubic-bezier(.3,1.7,.4,1)}
@@ -165,7 +165,7 @@ footer .love{font-family:"Lora",Georgia,serif;font-style:italic;color:#F0D9CF;ma
 .st.on{opacity:1}
 .st.on path.t{animation:pull .35s ease-out}
 @keyframes pull{from{stroke-dasharray:0 40}to{stroke-dasharray:40 0}}
-#needleF{transition:opacity .15s}
+#needleF{transition:opacity .15s;will-change:transform}
 .threaded .wrap{position:relative;z-index:2}
 @media (max-width:640px){.threaded .wrap{padding-left:1.9rem;padding-right:1.9rem}}
 
@@ -573,12 +573,13 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
     let n=0; while(n<stitches.length&&stitches[n].at<=drawn) n++;
     if(n!==lastOn){stitches.forEach((st,i)=>st.el.classList.toggle('on',i<n));lastOn=n}
     knots.forEach(k=>k.el.classList.toggle('on',drawn>=k.at-1));
-    if(SEAM){const q=Math.max(0,Math.min(1,(drawn-SEAM.from)/(SEAM.to-SEAM.from))), pull=(1-q)*9;
-      SEAM.a.style.translate=SEAM.side?`${-pull}px 0`:`0 ${-pull}px`; SEAM.b.style.translate=SEAM.side?`${pull}px 0`:`0 ${pull}px`;}
+    if(SEAM){const q=Math.max(0,Math.min(1,(drawn-SEAM.from)/(SEAM.to-SEAM.from))), pull=Math.round((1-q)*9*2)/2;
+      if(pull!==SEAM.last){SEAM.last=pull;
+        SEAM.a.style.translate=SEAM.side?`${-pull}px 0`:`0 ${-pull}px`; SEAM.b.style.translate=SEAM.side?`${pull}px 0`:`0 ${pull}px`;}}
   }
   function update(){
     const r=box.getBoundingClientRect(), vh=innerHeight;
-    target=reduce?len:lenForY(vh*0.72-r.top);
+    target=reduce?len:Math.max(target,lenForY(vh*0.72-r.top));   /* one way: never un-sews */
     if(reduce){cur=target;draw(cur);return}
     if(!raf) raf=requestAnimationFrame(tick);
   }
@@ -589,7 +590,10 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
     if(Math.abs(target-cur)>.5) raf=requestAnimationFrame(tick);
   }
   addEventListener('scroll',update,{passive:true});
-  addEventListener('resize',build); addEventListener('load',()=>{build();setTimeout(build,1200)}); build();
+  let lastW=box.clientWidth, rT=0;
+  addEventListener('resize',()=>{ if(box.clientWidth===lastW) { update(); return; } lastW=box.clientWidth; clearTimeout(rT); rT=setTimeout(()=>{target=0;cur=0;build()},250); });
+  build();
+  (document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>{ if(!cur) build(); });
 })();
 
 /* Embroider the "Åpningstider" heading in step with scrolling (one-way) */
@@ -612,7 +616,7 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
   }
   measure(); upd();
   addEventListener('scroll',()=>requestAnimationFrame(upd),{passive:true});
-  addEventListener('resize',()=>{measure();upd()});
+  let sw=innerWidth; addEventListener('resize',()=>{if(innerWidth!==sw){sw=innerWidth;measure()} upd()});
   (document.fonts&&document.fonts.ready||Promise.resolve()).then(()=>{measure();upd()});
 })();
 
