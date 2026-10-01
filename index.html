@@ -194,6 +194,13 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
 @keyframes bandroll{to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.band p{animation:none!important}.band{overflow-x:auto}}
 @media (min-width:821px){.band p{max-width:1140px}.band p .grp[aria-hidden]{display:none}.band p .grp>i:last-child{display:none}}
+
+/* The first two service cards are sewn together as you scroll */
+.svc{position:relative}
+.seam{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:4}
+.seam .x{fill:none;stroke:#B25A4C;stroke-width:1.9;stroke-linecap:round}
+.seam .xs{fill:none;stroke:rgba(70,40,30,.16);stroke-width:2.5;stroke-linecap:round}
+.seam circle{fill:#6E4A40;opacity:.55}
 .sticky{position:fixed;left:0;right:0;bottom:0;padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom,0px));background:rgba(47,59,107,.97);display:none;gap:.6rem;z-index:10}
 .sticky .btn{flex:1;padding:.85rem .8rem;color:#fff;border-color:#fff}
 .sticky .btn.primary{background:#fff;color:var(--navy)}
@@ -426,7 +433,7 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
   function buildLUT(){LUT=[];let my=-1e9;for(let l=0;l<=len;l+=4){const q=path.getPointAtLength(l);my=Math.max(my,q.y);LUT.push([l,my])}}
   function lenForY(y){if(!LUT.length) return 0;if(y<=LUT[0][1]) return 0;let lo=0,hi=LUT.length-1;
     if(y>=LUT[hi][1]) return len;while(hi-lo>1){const mid=(lo+hi)>>1;if(LUT[mid][1]<y) lo=mid;else hi=mid}return LUT[hi][0]}
-  let lastOn=-1;
+  let lastOn=-1, SEAM=null;
   let knots=[], inView=true;
   const KNOT='<path class="kt-tail" d="M-6 3 q-5 4 -11 3 M6 3 q5 5 11 5"/>'+
              '<ellipse class="kt-body" rx="7.5" ry="5.6"/>'+
@@ -457,10 +464,41 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
       return {d:o, end:py+k*2*Math.PI*turns};
     };
     const down=(px,y0,y1)=>` C${px} ${y0+(y1-y0)*.35} ${px} ${y1-(y1-y0)*.35} ${px} ${y1}`;
+    /* ---- seam: the same needle detours to lace "Omsøm" and "Bunadsøm" together ---- */
+    const svcCards=box.querySelectorAll('.svc .s'); let seam=null;
+    if(svcCards.length>=2){
+      const a=ro(svcCards[0]), b=ro(svcCards[1]);
+      if(b.x>a.x+a.w-2){                       /* side by side */
+        const x1=a.x+a.w-7, x2=b.x+7, top=Math.max(a.y,b.y)+24, bot=Math.min(a.y+a.h,b.y+b.h)-24, N=6, st=(bot-top)/N;
+        const pts=[]; for(let i=0;i<=N;i++){pts.push([x1,top+i*st]); if(i<N) pts.push([x2,top+i*st+st*.5]);}
+        seam={y0:top-40, start:[(x1+x2)/2,top-40], pts, end:[(x1+x2)/2,bot+30], A:svcCards[0], B:svcCards[1], side:true};
+      }else{                                     /* stacked on phones */
+        const y1=a.y+a.h-7, y2=b.y+7, l=Math.max(a.x,b.x)+26, r=Math.min(a.x+a.w,b.x+b.w)-26, N=6, st=(r-l)/N;
+        const pts=[]; for(let i=0;i<=N;i++){pts.push([l+i*st,y1]); if(i<N) pts.push([l+i*st+st*.5,y2]);}
+        seam={y0:y1-30, start:[l-20,(y1+y2)/2], pts, end:[r+20,(y1+y2)/2], A:svcCards[0], B:svcCards[1], side:false};
+      }
+    }
+    const seamPath=(fx,fy)=>{ /* from (fx,fy): arrive, lace back and forth, leave */
+      const S=seam.start, P0=seam.pts[0]; let o=` C${fx} ${fy+(S[1]-fy)*.6} ${S[0]} ${S[1]-30} ${S[0]} ${S[1]}`;
+      o+=` C${S[0]} ${S[1]+12} ${P0[0]} ${P0[1]-10} ${P0[0]} ${P0[1]}`;
+      seam.pts.slice(1).forEach(q=>{o+=` L${q[0].toFixed(1)} ${q[1].toFixed(1)}`});
+      const Lp=seam.pts[seam.pts.length-1], Ep=seam.end; o+=` C${Lp[0]} ${Lp[1]+14} ${Ep[0]} ${Ep[1]-14} ${Ep[0]} ${Ep[1]}`;
+      return o;
+    };
+    let seamFrom=-1, seamTo=-1;
+    const measure=dd=>{path.setAttribute('d',dd);return path.getTotalLength()};
     if(small){
       const g=14; let x=w-g, y=0, side=1, n=0; let dd='M'+x+' 0';
       const hop=Math.max(520,Math.min(760,h/5));
       while(y<h){
+        if(seam&&seamFrom<0&&seam.y0<y+hop){       /* go lace the two cards, then back to the gutter */
+          /* come down the gutter to the gap, lace across from this side, and continue down the other gutter */
+          const mid=(seam.pts[0][1]+seam.pts[1][1])/2, fromRight=x>w/2;
+          if(fromRight) seam.pts.reverse();
+          seam.start=[x,mid-14]; seam.end=[fromRight?g:w-g, mid+14];
+          seamFrom=measure(dd+seamPath(x,y).split(' L')[0]); dd+=seamPath(x,y); seamTo=measure(dd);
+          x=seam.end[0]; side=fromRight?-1:1; y=seam.end[1]; continue;
+        }
         const run=Math.min(h,y+hop*.72);
         /* hem stitch: down the gutter with a soft wobble */
         dd+=` C${x+(side>0?-5:5)} ${y+(run-y)*.33} ${x+(side>0?5:-5)} ${y+(run-y)*.66} ${x} ${run}`;
@@ -476,12 +514,16 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
         dd+=` C${x} ${y+(ay-y)*.6} ${E[0]} ${ay-60} ${E[0]} ${ay}`;
         dd+=` C${E[0]} ${HC.y+8} ${E[0]} ${E[1]-18} ${E[0]} ${E[1]}`; }
       path.setAttribute('d',dd); len=path.getTotalLength(); path.style.setProperty('--len',len);
-      const sh=document.getElementById('threadShadow'); sh.setAttribute('d',dd); sh.style.setProperty('--len',len); setFront(); buildLUT();
+      const sh=document.getElementById('threadShadow'); sh.setAttribute('d',dd); sh.style.setProperty('--len',len); SEAM=seam&&seamFrom>=0?{a:seam.A,b:seam.B,side:seam.side,from:seamFrom,to:seamTo}:null; setFront(); buildLUT();
       document.getElementById('knots').innerHTML=''; knots=[]; update(); return;
     }
     const kinds=['curl','spin','big','curl','spin','big'];
     while(y<h){
       const ny=Math.min(h,y+step), nx=side>0?m:w-m;
+      if(seam&&seamFrom<0&&seam.y0>y&&seam.y0<ny){
+        seamFrom=measure(d+seamPath(x,y).split(' L')[0]); d+=seamPath(x,y); seamTo=measure(d);
+        const Ep=seam.end; d+=` C${Ep[0]} ${Ep[1]+60} ${nx} ${Math.max(Ep[1]+40,ny-step*.4)} ${nx} ${Math.max(Ep[1]+80,ny)}`;
+      } else
       d+=` C${x} ${y+step*.55} ${nx} ${ny-step*.55} ${nx} ${ny}`;
       let ey=ny;
       if(ny<h-140){
@@ -507,7 +549,7 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
       d+=` C${E[0]} ${HC.y+10} ${E[0]} ${E[1]-24} ${E[0]} ${E[1]}`; }
     path.setAttribute('d',d); len=path.getTotalLength();
     path.style.setProperty('--len',len);
-    const sh=document.getElementById('threadShadow'); sh.setAttribute('d',d); sh.style.setProperty('--len',len); setFront(); buildLUT();
+    const sh=document.getElementById('threadShadow'); sh.setAttribute('d',d); sh.style.setProperty('--len',len); SEAM=seam&&seamFrom>=0?{a:seam.A,b:seam.B,side:seam.side,from:seamFrom,to:seamTo}:null; setFront(); buildLUT();
     /* find path length at each knot point by sampling */
     const lenAt=(px,py)=>{let best=0,bd=1e9;for(let l=0;l<=len;l+=6){const q=path.getPointAtLength(l),dd=(q.x-px)**2+(q.y-py)**2;if(dd<bd){bd=dd;best=l}}return best};
     const g=document.getElementById('knots'); g.innerHTML='';
@@ -531,6 +573,8 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
     let n=0; while(n<stitches.length&&stitches[n].at<=drawn) n++;
     if(n!==lastOn){stitches.forEach((st,i)=>st.el.classList.toggle('on',i<n));lastOn=n}
     knots.forEach(k=>k.el.classList.toggle('on',drawn>=k.at-1));
+    if(SEAM){const q=Math.max(0,Math.min(1,(drawn-SEAM.from)/(SEAM.to-SEAM.from))), pull=(1-q)*9;
+      SEAM.a.style.translate=SEAM.side?`${-pull}px 0`:`0 ${-pull}px`; SEAM.b.style.translate=SEAM.side?`${pull}px 0`:`0 ${pull}px`;}
   }
   function update(){
     const r=box.getBoundingClientRect(), vh=innerHeight;
@@ -575,6 +619,7 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
 /* Duplicate the ribbon content so it can roll seamlessly on phones */
 (function(){const t=document.getElementById('bandTrack');if(!t)return;
   const inner=t.innerHTML;t.innerHTML='<span class="grp">'+inner+'<i>|</i></span><span class="grp" aria-hidden="true">'+inner+'<i>|</i></span>';})();
+
 document.getElementById('loadFeed').onclick=()=>{
   const f=document.getElementById('feed'), w=Math.min(500,Math.max(280,f.clientWidth));
   f.innerHTML='<iframe title="Facebook-innlegg fra Ingeborgs Tråkleri" src="https://www.facebook.com/plugins/page.php?href='+encodeURIComponent('https://www.facebook.com/ingeborgstraakleri')+'&tabs=timeline&width='+w+'&height=580&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false" loading="lazy" allow="encrypted-media"></iframe>';
