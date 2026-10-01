@@ -430,7 +430,16 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
     }
   }
   let LUT=[], cur=0, target=0, raf=0;
-  function buildLUT(){LUT=[];let my=-1e9;for(let l=0;l<=len;l+=4){const q=path.getPointAtLength(l);my=Math.max(my,q.y);LUT.push([l,my])}}
+  function buildLUT(){
+    LUT=[]; let my=-1e9, ys=null; const S=small()?320:220;
+    for(let l=0;l<=len;l+=4){
+      const q=path.getPointAtLength(l); let v;
+      if(SEAM&&l>=SEAM.from&&l<=SEAM.to){ if(ys===null) ys=my; v=ys+(l-SEAM.from)/(SEAM.to-SEAM.from)*S; my=Math.max(my,v); }
+      else { my=Math.max(my,q.y); v=my; }
+      LUT.push([l,my]);
+    }
+  }
+  const small=()=>box.clientWidth<640;
   function lenForY(y){if(!LUT.length) return 0;if(y<=LUT[0][1]) return 0;let lo=0,hi=LUT.length-1;
     if(y>=LUT[hi][1]) return len;while(hi-lo>1){const mid=(lo+hi)>>1;if(LUT[mid][1]<y) lo=mid;else hi=mid}return LUT[hi][0]}
   let lastOn=-1, SEAM=null;
@@ -469,11 +478,11 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
     if(svcCards.length>=2){
       const a=ro(svcCards[0]), b=ro(svcCards[1]);
       if(b.x>a.x+a.w-2){                       /* side by side */
-        const x1=a.x+a.w-7, x2=b.x+7, top=Math.max(a.y,b.y)+24, bot=Math.min(a.y+a.h,b.y+b.h)-24, N=6, st=(bot-top)/N;
+        const x1=a.x+a.w-7, x2=b.x+7, top=Math.max(a.y,b.y)+22, bot=Math.min(a.y+a.h,b.y+b.h)-22, N=Math.max(7,Math.round((bot-top)/16)), st=(bot-top)/N;
         const pts=[]; for(let i=0;i<=N;i++){pts.push([x1,top+i*st]); if(i<N) pts.push([x2,top+i*st+st*.5]);}
         seam={y0:top-40, start:[(x1+x2)/2,top-40], pts, end:[(x1+x2)/2,bot+30], A:svcCards[0], B:svcCards[1], side:true};
       }else{                                     /* stacked on phones */
-        const y1=a.y+a.h-7, y2=b.y+7, l=Math.max(a.x,b.x)+26, r=Math.min(a.x+a.w,b.x+b.w)-26, N=6, st=(r-l)/N;
+        const y1=a.y+a.h-6, y2=b.y+6, l=Math.max(a.x,b.x)+22, r=Math.min(a.x+a.w,b.x+b.w)-22, N=Math.max(9,Math.round((r-l)/22)), st=(r-l)/N;
         const pts=[]; for(let i=0;i<=N;i++){pts.push([l+i*st,y1]); if(i<N) pts.push([l+i*st+st*.5,y2]);}
         seam={y0:y1-30, start:[l-20,(y1+y2)/2], pts, end:[r+20,(y1+y2)/2], A:svcCards[0], B:svcCards[1], side:false};
       }
@@ -573,7 +582,7 @@ h2.sewn{margin:0 auto .4rem;max-width:560px}
     let n=0; while(n<stitches.length&&stitches[n].at<=drawn) n++;
     if(n!==lastOn){stitches.forEach((st,i)=>st.el.classList.toggle('on',i<n));lastOn=n}
     knots.forEach(k=>k.el.classList.toggle('on',drawn>=k.at-1));
-    if(SEAM){const q=Math.max(0,Math.min(1,(drawn-SEAM.from)/(SEAM.to-SEAM.from))), pull=Math.round((1-q)*9*2)/2;
+    if(SEAM){const q=Math.max(0,Math.min(1,(drawn-SEAM.from)/(SEAM.to-SEAM.from))), pull=Math.round((1-q)*(SEAM.side?9:16)*2)/2;
       if(pull!==SEAM.last){SEAM.last=pull;
         SEAM.a.style.translate=SEAM.side?`${-pull}px 0`:`0 ${-pull}px`; SEAM.b.style.translate=SEAM.side?`${pull}px 0`:`0 ${pull}px`;}}
   }
